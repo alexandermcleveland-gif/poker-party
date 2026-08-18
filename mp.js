@@ -75,11 +75,26 @@
   $('join-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); });
 
   $('btn-start').addEventListener('click', async () => {
-    const resp = await api('/api/start', { botCount: botCount == null ? undefined : botCount, difficulty });
+    const resp = await api('/api/start', {
+      botCount: botCount == null ? undefined : botCount,
+      difficulty, smallBlind, startingStack,
+    });
     if (!resp.ok) $('start-error').textContent = resp.error || 'Could not start.';
     else poll();
   });
-  $('btn-reset').addEventListener('click', async () => { await api('/api/reset', {}); poll(); });
+  $('btn-reset').addEventListener('click', async () => {
+    if (confirm('Reset the table for EVERYONE back to the lobby?')) { await api('/api/reset', {}); poll(); }
+  });
+  async function leaveTable() {
+    await api('/api/leave', {});
+    try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    token = null;
+    clock.seat = -1;
+    showView('join');
+  }
+  $('btn-leave').addEventListener('click', () => {
+    if (confirm('Leave the table? The game continues for everyone else (a bot takes your chips).')) leaveTable();
+  });
 
   // ---------- lobby ----------
   const BOT_ORDER = ['Rosie', 'Tex', 'Doc']; // added in this order as count grows
@@ -90,6 +105,13 @@
   };
   let botCount = null;      // null = not yet initialized (defaults to filling the table)
   let difficulty = 'medium';
+  let smallBlind = 5;       // big blind is always 2×
+  let startingStack = 1000;
+
+  $('blinds').querySelectorAll('button').forEach((b) =>
+    b.addEventListener('click', () => { smallBlind = Number(b.dataset.sb); if (latest) renderLobby(latest); }));
+  $('buyin').querySelectorAll('button').forEach((b) =>
+    b.addEventListener('click', () => { startingStack = Number(b.dataset.buyin); if (latest) renderLobby(latest); }));
 
   function renderLobby(resp) {
     showView('lobby');
@@ -125,6 +147,10 @@
     $('difficulty').querySelectorAll('button').forEach((b) =>
       b.classList.toggle('sel', b.dataset.diff === difficulty));
     $('difficulty-desc').textContent = DIFF_DESC[difficulty];
+    $('blinds').querySelectorAll('button').forEach((b) =>
+      b.classList.toggle('sel', Number(b.dataset.sb) === smallBlind));
+    $('buyin').querySelectorAll('button').forEach((b) =>
+      b.classList.toggle('sel', Number(b.dataset.buyin) === startingStack));
 
     const total = nHumans + botCount;
     $('btn-start').disabled = total < 2;
@@ -384,6 +410,11 @@
       }
       case 'sit-in': {
         log('<b>' + (ev.seat === mySeat ? 'You sit in' : esc(ev.name) + ' sits in') + ' at the table.</b>');
+        renderTable();
+        return EVT_DELAY * 0.5;
+      }
+      case 'left': {
+        log('<b>' + esc(ev.name) + ' left the table</b> — a bot is playing their chips.');
         renderTable();
         return EVT_DELAY * 0.5;
       }
@@ -677,6 +708,13 @@
         showView('join');
         return;
       }
+      if (resp.left) { // we left (or were removed) — go back to the join screen
+        token = null;
+        try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+        clock.seat = -1;
+        showView('join');
+        return;
+      }
       latest = resp;
       if (resp.mode === 'lobby') {
         lastSeq = 0;
@@ -702,6 +740,7 @@
       $('btn-reset').style.display = '';
       $('mp-status').textContent = 'You are ' + resp.you.name +
         (resp.you.spectating ? ' · watching' : (resp.difficulty ? ' · Bots: ' + resp.difficulty : ''));
+      if (resp.smallBlind) $('blinds-label').textContent = resp.smallBlind + ' / ' + resp.bigBlind;
       const newGame = resp.gen !== curGen;
       if (resp.resync || newGame || (lastSeq === 0 && resp.events.length === 0)) {
         // fresh join / new game / trimmed history / big backlog: adopt state directly

@@ -51,6 +51,24 @@
         </div>
         <div class="mp-sublabel" id="difficulty-desc"></div>
       </div>
+      <div class="mp-field">
+        <div class="mp-label">Blinds</div>
+        <div class="mp-choice" id="blinds">
+          <button data-sb="5" class="sel">$5 / $10</button>
+          <button data-sb="10">$10 / $20</button>
+          <button data-sb="25">$25 / $50</button>
+          <button data-sb="50">$50 / $100</button>
+        </div>
+      </div>
+      <div class="mp-field">
+        <div class="mp-label">Buy-in (starting chips)</div>
+        <div class="mp-choice" id="buyin">
+          <button data-buyin="500">$500</button>
+          <button data-buyin="1000" class="sel">$1,000</button>
+          <button data-buyin="2500">$2,500</button>
+          <button data-buyin="5000">$5,000</button>
+        </div>
+      </div>
       <button class="btn-primary" id="btn-start">Start the game ▸</button>
       <div class="mp-error" id="start-error"></div>
       <div class="mp-hint">Anyone can set this up and start — you don't have to be the host.</div>
@@ -63,10 +81,11 @@
   <div class="play-wrap">
     <div class="table-zone">
       <div class="table-status">
-        <div>Blinds <b style="color:var(--text)">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
+        <div>Blinds <b style="color:var(--text)" id="blinds-label">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
         <div class="right">
           <span id="mp-status" style="color:var(--dim)"></span>
-          <button id="btn-reset" style="display:none">↩ Back to lobby</button>
+          <button id="btn-leave">🚪 Leave</button>
+          <button id="btn-reset">↩ Reset table</button>
         </div>
       </div>
 

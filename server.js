@@ -235,7 +235,7 @@ const PLAYER_STALE_MS = 30000;
 function reapLobbyGhosts() {
   if (S.mode !== 'lobby') return;
   const now = Date.now();
-  const kept = S.players.filter((p) => now - p.lastSeen <= PLAYER_STALE_MS);
+  const kept = S.players.filter((p) => !p.left && now - p.lastSeen <= PLAYER_STALE_MS);
   if (kept.length !== S.players.length) {
     S.players = kept;
     if (kept.length && !kept.some((p) => p.isHost)) kept[0].isHost = true;
@@ -275,6 +275,7 @@ function apiJoin(body, ip) {
 function apiStart(player, body) {
   // Any player can start (avoids a frozen lobby if the first joiner leaves).
   if (S.mode !== 'lobby') return { ok: false, error: 'Already started.' };
+  S.players = S.players.filter((p) => !p.left); // drop anyone who left the lobby
   const humans = S.players.map((p) => ({ name: p.name, isBot: false, emoji: p.emoji }));
   const seats = humans.slice();
   const diffKey = DIFFICULTIES[body.difficulty] ? body.difficulty : 'medium';
@@ -287,8 +288,17 @@ function apiStart(player, body) {
     seats.push({ name: f.name, isBot: true, emoji: f.emoji, personality: botPersonality(f, diffKey) });
   }
   if (seats.length < 2) return { ok: false, error: 'Need at least 2 players — invite someone or add a bot.' };
+  // Table stakes — validated/clamped so a public server can't be given silly values.
+  let sb = Math.round(Number(body.smallBlind));
+  if (!Number.isFinite(sb) || sb < 1) sb = 5;
+  sb = Math.max(1, Math.min(5000, sb));
+  const bb = sb * 2; // big blind is always twice the small blind
+  let stack = Math.round(Number(body.startingStack));
+  if (!Number.isFinite(stack)) stack = 1000;
+  stack = Math.max(bb * 10, Math.min(1000000, stack)); // at least 10 big blinds
   S.players.forEach((p) => { p.spectating = false; }); // everyone in the lobby is seated now
-  S.game = new E.Game({ players: seats, startingStack: STARTING_STACK, smallBlind: 5, bigBlind: 10 });
+  S.startingStack = stack; S.smallBlind = sb; S.bigBlind = bb;
+  S.game = new E.Game({ players: seats, startingStack: stack, smallBlind: sb, bigBlind: bb });
   S.mode = 'game';
   S.gen++;                 // new game generation
   S.log = []; S.revealed = new Set(); // seq is NOT reset — stays monotonic across games
@@ -307,11 +317,12 @@ function apiNext(player) {
   if (g.phase !== 'handComplete') return { ok: false, error: 'The hand is still going.' };
   seatWaitingPlayers(); // deal in anyone who joined mid-game (takes over a bot seat)
   // Humans always rebuy so nobody sits out; bots stay busted.
+  const buyIn = S.startingStack || STARTING_STACK;
   g.seats.forEach((s, i) => {
     if (!s.isBot && s.stack <= 0) {
-      s.stack = STARTING_STACK;
+      s.stack = buyIn;
       s.out = false;
-      pushSyntheticEvent({ type: 'rebuy', seat: i, amount: STARTING_STACK });
+      pushSyntheticEvent({ type: 'rebuy', seat: i, amount: buyIn });
     }
   });
   g.startHand();
@@ -324,15 +335,48 @@ function apiReset(player) {
   // Any player can reset to the lobby (so a stuck table is always recoverable).
   if (S.botTimer) clearTimeout(S.botTimer);
   S.botGen++; // invalidate any pending bot/actor timer callback
-  // Return to the lobby, keeping only players who are still connected, as normal
-  // (non-spectating) players — drops ghosts so seats aren't stuck taken.
+  // Return to the lobby, keeping only players who are still connected (and didn't
+  // leave), as normal (non-spectating) players — drops ghosts so seats aren't stuck.
   const now = Date.now();
   const kept = S.players
-    .filter((p) => now - p.lastSeen <= PLAYER_STALE_MS)
+    .filter((p) => !p.left && now - p.lastSeen <= PLAYER_STALE_MS)
     .map((p) => Object.assign({}, p, { spectating: false }));
   if (kept.length && !kept.some((p) => p.isHost)) kept[0].isHost = true;
   S = newLobby(kept, S.seq, S.gen);
   return { ok: true };
+}
+
+// One player leaves without ending the game for everyone else.
+function apiLeave(player) {
+  const i = S.players.indexOf(player);
+  if (i < 0 || player.left) return { ok: true, left: true };
+  if (S.mode === 'lobby') {
+    // No game mapping to preserve — just remove them and reassign the host label.
+    S.players.splice(i, 1);
+    if (S.players.length && !S.players.some((p) => p.isHost)) S.players[0].isHost = true;
+    return { ok: true, left: true };
+  }
+  // Mid-game: hand their seat to a bot so play continues; flag them as gone.
+  player.left = true;
+  const g = S.game;
+  if (g && g.seats[i] && !g.seats[i].isBot) {
+    g.seats[i].isBot = true;
+    g.seats[i].personality = botPersonality(BOT_FLAVOR[i % BOT_FLAVOR.length], S.difficulty || 'medium');
+    pushSyntheticEvent({ type: 'left', seat: i, name: player.name });
+  }
+  if (player.isHost) { // pass the host label to someone still here
+    player.isHost = false;
+    const h = S.players.find((p) => !p.left);
+    if (h) h.isHost = true;
+  }
+  if (g && g.phase === 'betting' && g.actor === i) { drainToLog(); scheduleBots(); }
+  // If everyone has left, wipe back to a clean lobby so no all-bot game runs forever.
+  if (S.players.every((p) => p.left)) {
+    if (S.botTimer) clearTimeout(S.botTimer);
+    S.botGen++;
+    S = newLobby([], S.seq, S.gen);
+  }
+  return { ok: true, left: true };
 }
 
 function apiAct(player, body) {
@@ -358,6 +402,7 @@ function apiAct(player, body) {
 
 function apiState(player, query) {
   player.lastSeen = Date.now();
+  if (player.left) return { ok: true, left: true }; // tell their client to show the join screen
   reapLobbyGhosts(); // keep the lobby list fresh and free seats held by no-shows
   const seat = S.mode === 'game' ? seatOf(player) : -1;
   const now = Date.now();
@@ -368,7 +413,7 @@ function apiState(player, query) {
     gen: S.gen,
     you: { seat, name: player.name, emoji: player.emoji, isHost: player.isHost, spectating: !!player.spectating },
     lobby: {
-      players: S.players.map((p) => ({
+      players: S.players.filter((p) => !p.left).map((p) => ({
         name: p.name, emoji: p.emoji, isHost: p.isHost,
         connected: now - p.lastSeen < 6000,
       })),
@@ -392,6 +437,7 @@ function apiState(player, query) {
     resp.handNum = g.handNum;
     resp.hostName = (S.players.find((p) => p.isHost) || {}).name || '?';
     resp.difficulty = (DIFFICULTIES[S.difficulty] || DIFFICULTIES.medium).label;
+    resp.smallBlind = g.smallBlind; resp.bigBlind = g.bigBlind; // for the table header
     resp.seatsMeta = g.seats.map((s) => ({ name: s.name, emoji: s.emoji, isBot: s.isBot }));
     resp.youTurn = g.phase === 'betting' && g.actor === seat;
     // Live play clock for the current human actor (bots act instantly, so no clock).
@@ -466,6 +512,7 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/act' && req.method === 'POST') return sendJson(res, apiAct(player, body));
       if (pathname === '/api/next' && req.method === 'POST') return sendJson(res, apiNext(player));
       if (pathname === '/api/reset' && req.method === 'POST') return sendJson(res, apiReset(player));
+      if (pathname === '/api/leave' && req.method === 'POST') return sendJson(res, apiLeave(player));
       return sendJson(res, { ok: false, error: 'not found' }, 404);
     } catch (e) {
       return sendJson(res, { ok: false, error: 'bad request' }, 400);
