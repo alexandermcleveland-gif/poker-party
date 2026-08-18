@@ -241,27 +241,66 @@
   newNameQuestion();
 
   // ============ PLAY ============
-  const SEAT_CLASS = ['seat-you', 'seat-left', 'seat-top', 'seat-right'];
-  const DEALER_POS = [
-    { left: '38%', top: '69%' }, { left: '21%', top: '34%' },
-    { left: '40%', top: '20%' }, { left: '76%', top: '34%' },
-  ];
-  const BET_POS = [
-    { left: '35%', top: '64%' }, { left: '26%', top: '46%' },
-    { left: '50%', top: '30%' }, { left: '74%', top: '46%' },
-  ];
+  // Seat positions adapt to the number of players (2 = heads-up, 3, or 4).
+  const LAYOUTS = {
+    1: ['seat-you'],
+    2: ['seat-you', 'seat-top'],
+    3: ['seat-you', 'seat-left', 'seat-right'],
+    4: ['seat-you', 'seat-left', 'seat-top', 'seat-right'],
+  };
+  const seatClass = (i, n) => (LAYOUTS[n] || LAYOUTS[4])[i];
+  const DEALER_POS = {
+    'seat-you': { left: '38%', top: '69%' }, 'seat-left': { left: '21%', top: '34%' },
+    'seat-top': { left: '40%', top: '20%' }, 'seat-right': { left: '76%', top: '34%' },
+  };
+  const BET_POS = {
+    'seat-you': { left: '35%', top: '64%' }, 'seat-left': { left: '26%', top: '46%' },
+    'seat-top': { left: '50%', top: '30%' }, 'seat-right': { left: '74%', top: '46%' },
+  };
   const SPEEDS = {
     fast: { evt: 220, street: 450, bot: 380 },
     normal: { evt: 480, street: 850, bot: 950 },
     slow: { evt: 800, street: 1300, bot: 1700 },
   };
 
-  const PLAYERS = [
-    { name: 'You', isBot: false, emoji: '🙂' },
-    { name: 'Doc', isBot: true, emoji: '🦉', personality: { tight: 0.8, aggr: 0.35, bluff: 0.08 } },
-    { name: 'Tex', isBot: true, emoji: '🤠', personality: { tight: 0.5, aggr: 0.55, bluff: 0.2 } },
-    { name: 'Rosie', isBot: true, emoji: '🦊', personality: { tight: 0.2, aggr: 0.85, bluff: 0.4 } },
+  // Difficulty presets + per-bot flavor (matches the multiplayer server so the
+  // bots feel the same in both modes).
+  const DIFFICULTIES = {
+    easy: { base: { tight: 0.15, aggr: 0.20, bluff: 0.05 } },
+    medium: { base: { tight: 0.50, aggr: 0.55, bluff: 0.20 } },
+    hard: { base: { tight: 0.72, aggr: 0.80, bluff: 0.38 } },
+  };
+  const BOT_FLAVOR = [
+    { name: 'Rosie', emoji: '🦊', d: { tight: -0.18, aggr: 0.12, bluff: 0.10 } },
+    { name: 'Tex', emoji: '🤠', d: { tight: 0, aggr: 0, bluff: 0 } },
+    { name: 'Doc', emoji: '🦉', d: { tight: 0.14, aggr: -0.15, bluff: -0.05 } },
   ];
+  const DIFF_DESC = {
+    easy: 'Loose and passive — call too much, rarely bluff. Easiest to beat.',
+    medium: 'A balanced mix of styles. A fair challenge while you learn.',
+    hard: 'Tight and aggressive — fold weak hands and punish yours. Toughest.',
+  };
+  const clamp01 = (x) => Math.max(0.02, Math.min(0.98, x));
+  function botPersonality(flavor, diffKey) {
+    const base = (DIFFICULTIES[diffKey] || DIFFICULTIES.medium).base;
+    return {
+      tight: clamp01(base.tight + flavor.d.tight),
+      aggr: clamp01(base.aggr + flavor.d.aggr),
+      bluff: clamp01(base.bluff + flavor.d.bluff),
+    };
+  }
+
+  // Game setup (chosen on the setup screen)
+  const setup = { bots: 3, difficulty: 'medium', smallBlind: 5, startingStack: 1000, speed: 'normal' };
+
+  function buildPlayers() {
+    const players = [{ name: 'You', isBot: false, emoji: '🙂' }];
+    for (let i = 0; i < setup.bots; i++) {
+      const f = BOT_FLAVOR[i % BOT_FLAVOR.length];
+      players.push({ name: f.name, isBot: true, emoji: f.emoji, personality: botPersonality(f, setup.difficulty) });
+    }
+    return players;
+  }
 
   let game = null;
   let ui = null; // per-hand UI state
@@ -271,7 +310,7 @@
   let coachOn = true;
   try { coachOn = localStorage.getItem('pokerTrainerCoach') !== 'off'; } catch (e) {}
 
-  function speedCfg() { return SPEEDS[$('speed').value] || SPEEDS.normal; }
+  function speedCfg() { return SPEEDS[setup.speed] || SPEEDS.normal; }
 
   function resetUiState() {
     ui = { badges: {}, reveals: {}, shand: {}, awards: [], streetName: '', winners: new Set() };
@@ -280,9 +319,10 @@
   function buildSeats() {
     const table = $('pokerTable');
     table.querySelectorAll('.seat, .dealer-chip, .bet-chip').forEach((el) => el.remove());
+    const n = game.seats.length;
     game.seats.forEach((s, i) => {
       const d = document.createElement('div');
-      d.className = 'seat ' + SEAT_CLASS[i];
+      d.className = 'seat ' + seatClass(i, n);
       d.id = 'seat-' + i;
       d.innerHTML =
         '<div class="badge" id="badge-' + i + '" style="display:none"></div>' +
@@ -335,7 +375,8 @@
     });
 
     // dealer chip
-    const dp = DEALER_POS[st.button];
+    const nSeats = st.seats.length;
+    const dp = DEALER_POS[seatClass(st.button, nSeats)];
     const chip = $('dealer-chip');
     chip.style.left = dp.left; chip.style.top = dp.top;
 
@@ -345,7 +386,8 @@
       if (s.bet > 0) {
         const b = document.createElement('div');
         b.className = 'bet-chip';
-        b.style.left = BET_POS[i].left; b.style.top = BET_POS[i].top;
+        const bp = BET_POS[seatClass(i, nSeats)];
+        b.style.left = bp.left; b.style.top = bp.top;
         b.style.transform = 'translate(-50%,-50%)';
         b.textContent = s.bet;
         $('pokerTable').appendChild(b);
@@ -733,12 +775,13 @@
 
     const btn = $('banner-btn');
     if (you.stack <= 0) {
+      const buyIn = setup.startingStack;
       title += ' — you\'re out of chips!';
       sub += ' Rebuy to keep practicing.';
-      btn.textContent = 'Rebuy $1000 & deal ▸';
+      btn.textContent = 'Rebuy $' + buyIn + ' & deal ▸';
       btn.onclick = () => {
-        you.stack = 1000; you.out = false;
-        log('<b>You rebuy for $1000.</b>');
+        you.stack = buyIn; you.out = false;
+        log('<b>You rebuy for $' + buyIn + '.</b>');
         hideBanner(); game.startHand(); enqueue(game.drainEvents());
       };
     } else {
@@ -768,16 +811,47 @@
     if (botTimer) { clearTimeout(botTimer); botTimer = null; }
     pumpGen++; // invalidate any in-flight pump timer from the old game
     uiQueue.length = 0; uiBusy = false;
-    game = new E.Game({ players: PLAYERS, startingStack: 1000, smallBlind: 5, bigBlind: 10 });
+    const sb = setup.smallBlind, bb = sb * 2, stack = setup.startingStack;
+    game = new E.Game({ players: buildPlayers(), startingStack: stack, smallBlind: sb, bigBlind: bb });
+    $('solo-blinds-label').textContent = sb + ' / ' + bb;
     resetUiState();
     buildSeats();
     $('log-body').innerHTML = '';
-    log('<b>New game.</b> Everyone starts with $1000. Blinds are $5/$10. Good luck!');
+    log('<b>New game.</b> Everyone starts with $' + stack + '. Blinds are $' + sb + '/$' + bb + '. Good luck!');
     hideBanner();
     game.startHand();
     enqueue(game.drainEvents());
   }
-  $('btn-newgame').addEventListener('click', newGame);
 
-  newGame();
+  // ---------- setup screen ----------
+  const BOT_ORDER = ['Rosie', 'Tex', 'Doc'];
+  function showSetup() {
+    $('solo-setup').style.display = '';
+    $('solo-game').style.display = 'none';
+    if (botTimer) { clearTimeout(botTimer); botTimer = null; }
+    renderSetup();
+  }
+  function startGame() {
+    $('solo-setup').style.display = 'none';
+    $('solo-game').style.display = '';
+    newGame();
+  }
+  function renderSetup() {
+    $('solo-bots').querySelectorAll('button').forEach((b) => b.classList.toggle('sel', Number(b.dataset.bots) === setup.bots));
+    $('solo-bot-names').textContent = 'Playing: ' + BOT_ORDER.slice(0, setup.bots).join(', ');
+    $('solo-diff').querySelectorAll('button').forEach((b) => b.classList.toggle('sel', b.dataset.diff === setup.difficulty));
+    $('solo-diff-desc').textContent = DIFF_DESC[setup.difficulty];
+    $('solo-blinds').querySelectorAll('button').forEach((b) => b.classList.toggle('sel', Number(b.dataset.sb) === setup.smallBlind));
+    $('solo-buyin').querySelectorAll('button').forEach((b) => b.classList.toggle('sel', Number(b.dataset.buyin) === setup.startingStack));
+    $('solo-speed').querySelectorAll('button').forEach((b) => b.classList.toggle('sel', b.dataset.speed === setup.speed));
+  }
+  $('solo-bots').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { setup.bots = Number(b.dataset.bots); renderSetup(); }));
+  $('solo-diff').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { setup.difficulty = b.dataset.diff; renderSetup(); }));
+  $('solo-blinds').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { setup.smallBlind = Number(b.dataset.sb); renderSetup(); }));
+  $('solo-buyin').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { setup.startingStack = Number(b.dataset.buyin); renderSetup(); }));
+  $('solo-speed').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { setup.speed = b.dataset.speed; renderSetup(); }));
+  $('solo-start').addEventListener('click', startGame);
+  $('btn-newgame').addEventListener('click', showSetup); // "New game" reopens the setup
+
+  showSetup(); // begin on the setup screen instead of auto-starting a game
 })();

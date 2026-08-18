@@ -195,19 +195,62 @@
 
 <!-- ============================ PLAY ============================ -->
 <section class="tab" id="tab-play">
-  <div class="play-wrap">
+  <!-- Setup screen: choose bots, difficulty, blinds, buy-in before playing -->
+  <div id="solo-setup" class="mp-card" style="max-width:580px;margin:10px auto">
+    <h2>Set up your game</h2>
+    <div class="mp-field">
+      <div class="mp-label">Opponents (bots)</div>
+      <div class="mp-choice" id="solo-bots">
+        <button data-bots="1">1</button>
+        <button data-bots="2">2</button>
+        <button data-bots="3" class="sel">3</button>
+      </div>
+      <div class="mp-sublabel" id="solo-bot-names"></div>
+    </div>
+    <div class="mp-field">
+      <div class="mp-label">Difficulty</div>
+      <div class="mp-choice" id="solo-diff">
+        <button data-diff="easy">Easy</button>
+        <button data-diff="medium" class="sel">Medium</button>
+        <button data-diff="hard">Hard</button>
+      </div>
+      <div class="mp-sublabel" id="solo-diff-desc"></div>
+    </div>
+    <div class="mp-field">
+      <div class="mp-label">Blinds</div>
+      <div class="mp-choice" id="solo-blinds">
+        <button data-sb="5" class="sel">$5 / $10</button>
+        <button data-sb="10">$10 / $20</button>
+        <button data-sb="25">$25 / $50</button>
+        <button data-sb="50">$50 / $100</button>
+      </div>
+    </div>
+    <div class="mp-field">
+      <div class="mp-label">Buy-in (starting chips)</div>
+      <div class="mp-choice" id="solo-buyin">
+        <button data-buyin="500">$500</button>
+        <button data-buyin="1000" class="sel">$1,000</button>
+        <button data-buyin="2500">$2,500</button>
+        <button data-buyin="5000">$5,000</button>
+      </div>
+    </div>
+    <div class="mp-field">
+      <div class="mp-label">Speed</div>
+      <div class="mp-choice" id="solo-speed">
+        <button data-speed="fast">Fast</button>
+        <button data-speed="normal" class="sel">Normal</button>
+        <button data-speed="slow">Slow</button>
+      </div>
+    </div>
+    <button class="btn-primary" id="solo-start">Start game ▸</button>
+  </div>
+
+  <div class="play-wrap" id="solo-game" style="display:none">
     <div class="table-zone">
       <div class="table-status">
-        <div>Blinds <b style="color:var(--text)">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
+        <div>Blinds <b style="color:var(--text)" id="solo-blinds-label">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
         <div class="right">
-          <label>Speed
-            <select id="speed">
-              <option value="fast">Fast</option>
-              <option value="normal" selected>Normal</option>
-              <option value="slow">Slow</option>
-            </select>
-          </label>
-          <button id="btn-newgame">↻ New game</button>
+          <button id="btn-newgame">⚙ New game</button>
         </div>
       </div>
 
