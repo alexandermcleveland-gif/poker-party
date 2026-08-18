@@ -339,3 +339,33 @@ nav .navlink:hover { color: var(--gold); background: var(--panel2); border-color
 /* Leave / reset buttons in the table header */
 #btn-leave { border-color: rgba(228,64,95,.5) !important; color: #ff8fa3 !important; }
 #btn-leave:hover { background: rgba(228,64,95,.15) !important; }
+
+/* Two-button banner (rebuy / leave) */
+.banner-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-ghost {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+  font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--red); color: #ff8fa3; }
+
+/* ===== Main menu (index.html) ===== */
+.menu-hero { text-align: center; margin: 30px 0 26px; }
+.menu-hero h2 { font-size: 26px; margin-bottom: 8px; }
+.menu-sub { color: var(--dim); font-size: 15px; }
+.menu-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+  max-width: 720px; margin: 0 auto;
+}
+@media (max-width: 620px) { .menu-grid { grid-template-columns: 1fr; } }
+.menu-card {
+  display: block; text-decoration: none; color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 26px 24px; transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.menu-card:hover { transform: translateY(-3px); border-color: var(--gold); background: var(--panel2); }
+.mc-icon { font-size: 40px; line-height: 1; margin-bottom: 12px; }
+.mc-title { font-size: 20px; font-weight: 800; color: var(--gold); margin-bottom: 7px; }
+.mc-desc { font-size: 14px; line-height: 1.55; color: #cdd6ea; }
+
+/* Back-to-menu link in app headers */
+.navlink.menu-back { color: var(--gold); }

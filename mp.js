@@ -95,6 +95,12 @@
   $('btn-leave').addEventListener('click', () => {
     if (confirm('Leave the table? The game continues for everyone else (a bot takes your chips).')) leaveTable();
   });
+  // Main Menu: leave the table cleanly (so you don't hold a seat), then go to the menu.
+  $('lnk-menu').addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (token) { try { await api('/api/leave', {}); } catch (err) {} try { localStorage.removeItem(TOKEN_KEY); } catch (err) {} }
+    window.location.href = 'index.html';
+  });
 
   // ---------- lobby ----------
   const BOT_ORDER = ['Rosie', 'Tex', 'Doc']; // added in this order as count grows
@@ -428,6 +434,14 @@
   function onQueueEmpty() {
     if (!latest || latest.mode !== 'game') return;
     renderTable();
+    // Busted? Offer a rebuy (or leave) — this overrides other banners, just for me.
+    const meSnap = ui.snap && mySeat >= 0 ? ui.snap.seats[mySeat] : null;
+    const iAmBot = seatsMeta[mySeat] && seatsMeta[mySeat].isBot;
+    if (meSnap && !latest.you.spectating && !iAmBot && meSnap.stack <= 0 && !latest.youTurn) {
+      hideActionBar();
+      showRebuyBanner();
+      return;
+    }
     if (latest.you.spectating) {
       // Watching until dealt in — no action bar, friendly note in the coach panel.
       hideActionBar();
@@ -667,6 +681,7 @@
     }
     $('banner-title').textContent = title;
     $('banner-sub').innerHTML = sub;
+    $('banner-btn2').style.display = 'none';
     const btn = $('banner-btn');
     btn.style.display = '';
     btn.disabled = false; // never leave it stuck from a failed previous click
@@ -678,9 +693,27 @@
     $('banner').classList.add('show');
   }
 
+  function showRebuyBanner() {
+    const amt = latest.startingStack || 1000;
+    $('banner-title').textContent = '💸 You\'re out of chips!';
+    $('banner-sub').innerHTML = 'Buy back in for <b>$' + amt + '</b> to keep playing — the game goes on without you until you do.';
+    const btn = $('banner-btn');
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Rebuy $' + amt + ' ▸';
+    btn.onclick = async () => { btn.disabled = true; try { await api('/api/rebuy', {}); } finally { btn.disabled = false; poll(); } };
+    const btn2 = $('banner-btn2');
+    btn2.style.display = '';
+    btn2.disabled = false;
+    btn2.textContent = '🚪 Leave table';
+    btn2.onclick = () => leaveTable();
+    $('banner').classList.add('show');
+  }
+
   function showGameOverBanner() {
     $('banner-title').textContent = 'Game over';
     $('banner-sub').textContent = 'Anyone can take the table back to the lobby to play again.';
+    $('banner-btn2').style.display = 'none';
     const btn = $('banner-btn');
     btn.style.display = '';
     btn.disabled = false;

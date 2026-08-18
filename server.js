@@ -49,8 +49,8 @@ const HUMAN_EMOJI = ['🙂', '🐯', '🐼', '🦁'];
 
 // ---------- static files (explicit whitelist — nothing else is served) ----------
 const STATIC_FILES = {
-  '/': 'Poker Party.html',
-  '/index.html': 'Poker Party.html',
+  '/': 'index.html',                 // main menu
+  '/index.html': 'index.html',
   '/Poker Party.html': 'Poker Party.html',
   '/Poker Trainer.html': 'Poker Trainer.html',
   '/engine.js': 'engine.js',
@@ -316,15 +316,8 @@ function apiNext(player) {
   if (g.phase === 'gameOver') return { ok: false, error: 'Game over — reset to return to the lobby.' };
   if (g.phase !== 'handComplete') return { ok: false, error: 'The hand is still going.' };
   seatWaitingPlayers(); // deal in anyone who joined mid-game (takes over a bot seat)
-  // Humans always rebuy so nobody sits out; bots stay busted.
-  const buyIn = S.startingStack || STARTING_STACK;
-  g.seats.forEach((s, i) => {
-    if (!s.isBot && s.stack <= 0) {
-      s.stack = buyIn;
-      s.out = false;
-      pushSyntheticEvent({ type: 'rebuy', seat: i, amount: buyIn });
-    }
-  });
+  // Busted humans are NOT auto-rebought — they get a rebuy prompt and sit out until
+  // they choose to buy back in (see apiRebuy). Bots stay busted.
   g.startHand();
   drainToLog();
   scheduleBots();
@@ -343,6 +336,22 @@ function apiReset(player) {
     .map((p) => Object.assign({}, p, { spectating: false }));
   if (kept.length && !kept.some((p) => p.isHost)) kept[0].isHost = true;
   S = newLobby(kept, S.seq, S.gen);
+  return { ok: true };
+}
+
+// A busted player chooses to buy back in for another stack.
+function apiRebuy(player) {
+  const g = S.game;
+  const seat = S.players.indexOf(player);
+  if (!g || S.mode !== 'game' || seat < 0 || !g.seats[seat] || g.seats[seat].isBot) {
+    return { ok: false, error: 'No seat to rebuy.' };
+  }
+  const s = g.seats[seat];
+  if (s.stack > 0 && !s.out) return { ok: true }; // already have chips
+  s.stack = S.startingStack || STARTING_STACK;
+  s.out = false;
+  pushSyntheticEvent({ type: 'rebuy', seat, amount: s.stack });
+  drainToLog();
   return { ok: true };
 }
 
@@ -438,6 +447,7 @@ function apiState(player, query) {
     resp.hostName = (S.players.find((p) => p.isHost) || {}).name || '?';
     resp.difficulty = (DIFFICULTIES[S.difficulty] || DIFFICULTIES.medium).label;
     resp.smallBlind = g.smallBlind; resp.bigBlind = g.bigBlind; // for the table header
+    resp.startingStack = S.startingStack || STARTING_STACK;     // for the rebuy prompt
     resp.seatsMeta = g.seats.map((s) => ({ name: s.name, emoji: s.emoji, isBot: s.isBot }));
     resp.youTurn = g.phase === 'betting' && g.actor === seat;
     // Live play clock for the current human actor (bots act instantly, so no clock).
@@ -512,6 +522,7 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/act' && req.method === 'POST') return sendJson(res, apiAct(player, body));
       if (pathname === '/api/next' && req.method === 'POST') return sendJson(res, apiNext(player));
       if (pathname === '/api/reset' && req.method === 'POST') return sendJson(res, apiReset(player));
+      if (pathname === '/api/rebuy' && req.method === 'POST') return sendJson(res, apiRebuy(player));
       if (pathname === '/api/leave' && req.method === 'POST') return sendJson(res, apiLeave(player));
       return sendJson(res, { ok: false, error: 'not found' }, 404);
     } catch (e) {

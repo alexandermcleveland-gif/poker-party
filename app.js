@@ -28,13 +28,16 @@
   });
 
   // ============ tabs ============
+  function activateTab(name) {
+    document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
+    document.querySelectorAll('section.tab').forEach((s) => s.classList.toggle('active', s.id === 'tab-' + name));
+  }
   document.querySelectorAll('nav button').forEach((b) => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('active', x === b));
-      document.querySelectorAll('section.tab').forEach((s) =>
-        s.classList.toggle('active', s.id === 'tab-' + b.dataset.tab));
-    });
+    b.addEventListener('click', () => activateTab(b.dataset.tab));
   });
+  // Open the tab named in the URL (e.g. Poker Trainer.html#play from the main menu).
+  const hashTab = (location.hash || '').replace('#', '');
+  if (['learn', 'quiz', 'play'].includes(hashTab)) activateTab(hashTab);
 
   // ============ QUIZ ============
   const CATS_DESC = [8, 7, 6, 5, 4, 3, 2, 1, 0]; // strongest first
