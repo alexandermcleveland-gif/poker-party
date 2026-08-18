@@ -315,3 +315,23 @@ nav .navlink:hover { color: var(--gold); background: var(--panel2); border-color
 @media (max-width: 560px) {
   .abtn { white-space: nowrap; font-size: 13px; padding: 13px 4px; letter-spacing: -0.2px; }
 }
+
+/* ===== Play clock (multiplayer) ===== */
+.seat .pclock {
+  position: absolute; top: -12px; right: 8px;
+  background: rgba(10,14,26,.92); border: 1px solid var(--blue); color: var(--blue);
+  font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+  z-index: 6; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.seat .pclock.low { border-color: var(--red); color: #ff8fa3; animation: clockpulse 1s ease-in-out infinite; }
+@keyframes clockpulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+.ab-clock {
+  margin-left: auto; background: var(--panel2); border: 1px solid var(--blue); color: var(--blue);
+  font-size: 13.5px; font-weight: 800; padding: 7px 13px; border-radius: 9px;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ab-clock.low { border-color: var(--red); color: #ff8fa3; }
+@media (max-width: 560px) {
+  .ab-clock { flex-basis: 100%; text-align: center; margin-left: 0; }
+  .seat .pclock { font-size: 10px; padding: 2px 7px; top: -10px; right: 4px; }
+}

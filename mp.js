@@ -165,6 +165,7 @@
       d.id = 'seat-' + i;
       d.innerHTML =
         '<div class="badge" id="badge-' + i + '" style="display:none"></div>' +
+        '<div class="pclock" id="pclock-' + i + '" style="display:none"></div>' +
         '<div class="avatar">' + (seatsMeta[i] ? seatsMeta[i].emoji : '🙂') + '</div>' +
         '<div class="nameplate"><div class="nm">' + esc(plainName(i)) + (i === mySeat ? ' ⭐' : '') + '</div><div class="stk" id="stk-' + i + '"></div></div>' +
         '<div class="hole" id="hole-' + i + '"></div>' +
@@ -249,6 +250,36 @@
     body.scrollTop = body.scrollHeight;
     while (body.children.length > 300) body.removeChild(body.firstChild);
   }
+
+  // ---------- play clock ----------
+  const clock = { seat: -1, ms: 0, at: 0, max: 0 };
+  function fmtClock(ms) {
+    const s = Math.ceil(ms / 1000);
+    if (s >= 60) return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    return String(s);
+  }
+  function tickClock() {
+    const showing = clock.seat >= 0 && !uiBusy && uiQueue.length === 0; // hide mid-animation
+    document.querySelectorAll('.pclock').forEach((el) => { el.style.display = 'none'; });
+    const abClock = $('ab-clock');
+    if (!showing) { if (abClock) abClock.style.display = 'none'; return; }
+    const left = Math.max(0, clock.ms - (Date.now() - clock.at));
+    const el = $('pclock-' + clock.seat);
+    const low = left <= 15000;
+    if (el) {
+      el.style.display = '';
+      el.textContent = '⏱ ' + fmtClock(left);
+      el.classList.toggle('low', low);
+    }
+    if (abClock) {
+      if (clock.seat === mySeat) {
+        abClock.style.display = '';
+        abClock.textContent = '⏱ ' + fmtClock(left) + ' to act';
+        abClock.classList.toggle('low', low);
+      } else { abClock.style.display = 'none'; }
+    }
+  }
+  setInterval(tickClock, 250);
 
   // ---------- event pump ----------
   const uiQueue = [];
@@ -652,6 +683,7 @@
         curGen = resp.gen;
         seatsMeta = [];
         tableBuilt = 0;
+        clock.seat = -1;
         flushQueue();         // drop any leftover animation from the finished game
         resetUiState();
         renderLobby(resp);
@@ -661,6 +693,12 @@
       showView('table');
       mySeat = resp.you.seat;
       seatsMeta = resp.seatsMeta;
+      // Snapshot the play clock: server tells us who's acting and how long they have.
+      if (resp.actorSeat != null && resp.actorMsLeft != null) {
+        clock.seat = resp.actorSeat; clock.ms = resp.actorMsLeft; clock.at = Date.now(); clock.max = resp.turnMaxMs || 0;
+      } else {
+        clock.seat = -1;
+      }
       $('btn-reset').style.display = '';
       $('mp-status').textContent = 'You are ' + resp.you.name +
         (resp.you.spectating ? ' · watching' : (resp.difficulty ? ' · Bots: ' + resp.difficulty : ''));

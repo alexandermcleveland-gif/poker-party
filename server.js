@@ -163,6 +163,8 @@ function scheduleBots() {
   // a player who keeps their seat across hands would be timed from their first-ever
   // turn and get auto-acted on every move once the session passed the limit.
   const turnStart = Date.now();
+  S.turnStartedAt = turnStart;  // exposed to clients as a live play-clock
+  S.turnActorSeat = seat;
   const tick = () => {
     if (gen !== S.botGen) return;
     const g2 = S.game;
@@ -392,6 +394,13 @@ function apiState(player, query) {
     resp.difficulty = (DIFFICULTIES[S.difficulty] || DIFFICULTIES.medium).label;
     resp.seatsMeta = g.seats.map((s) => ({ name: s.name, emoji: s.emoji, isBot: s.isBot }));
     resp.youTurn = g.phase === 'betting' && g.actor === seat;
+    // Live play clock for the current human actor (bots act instantly, so no clock).
+    if (g.phase === 'betting' && g.actor != null && g.seats[g.actor] &&
+        !g.seats[g.actor].isBot && S.turnActorSeat === g.actor && S.turnStartedAt) {
+      resp.actorSeat = g.actor;
+      resp.actorMsLeft = Math.max(0, HUMAN_TURN_MAX_MS - (Date.now() - S.turnStartedAt));
+      resp.turnMaxMs = HUMAN_TURN_MAX_MS;
+    }
     if (resp.youTurn) {
       resp.legal = g.legalActions(seat);
       resp.pot = g.totalPot();
