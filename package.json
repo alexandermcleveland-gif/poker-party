@@ -1,0 +1,13 @@
+{
+  "name": "poker-party",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Texas Hold'em practice trainer + local/online multiplayer party game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

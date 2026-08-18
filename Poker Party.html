@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Party — Play Texas Hold'em Together</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>♠ Poker <span>Party</span> — Texas Hold'em</h1>
+  <nav>
+    <a class="navlink" href="/Poker Trainer.html">📖 Solo trainer</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============ JOIN ============ -->
+<section class="mp-view" id="view-join">
+  <div class="mp-card">
+    <h2>Join the table</h2>
+    <p class="mp-hint" id="join-hint">Everyone with this link can join. Type your name and sit down.</p>
+    <div class="mp-form">
+      <input type="text" id="join-name" maxlength="12" placeholder="Your name" autocomplete="off">
+      <input type="text" id="join-code" maxlength="12" placeholder="Room code" autocomplete="off" style="display:none; text-transform:uppercase">
+      <button class="btn-primary" id="btn-join">Sit down ▸</button>
+    </div>
+    <div class="mp-error" id="join-error"></div>
+  </div>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section class="mp-view" id="view-lobby" style="display:none">
+  <div class="mp-card">
+    <h2>Waiting room</h2>
+    <div id="lobby-players"></div>
+    <div id="lobby-controls">
+      <div class="mp-field">
+        <div class="mp-label">Practice bots</div>
+        <div class="mp-choice" id="bot-count"></div>
+        <div class="mp-sublabel" id="bot-names"></div>
+      </div>
+      <div class="mp-field">
+        <div class="mp-label">Bot difficulty</div>
+        <div class="mp-choice" id="difficulty">
+          <button data-diff="easy">Easy</button>
+          <button data-diff="medium" class="sel">Medium</button>
+          <button data-diff="hard">Hard</button>
+        </div>
+        <div class="mp-sublabel" id="difficulty-desc"></div>
+      </div>
+      <button class="btn-primary" id="btn-start">Start the game ▸</button>
+      <div class="mp-error" id="start-error"></div>
+      <div class="mp-hint">Anyone can set this up and start — you don't have to be the host.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TABLE ============ -->
+<section class="mp-view" id="view-table" style="display:none">
+  <div class="play-wrap">
+    <div class="table-zone">
+      <div class="table-status">
+        <div>Blinds <b style="color:var(--text)">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
+        <div class="right">
+          <span id="mp-status" style="color:var(--dim)"></span>
+          <button id="btn-reset" style="display:none">↩ Back to lobby</button>
+        </div>
+      </div>
+
+      <div class="poker-table" id="pokerTable">
+        <div class="board-zone">
+          <div class="street-label" id="street-label"></div>
+          <div class="board-cards" id="board-cards"></div>
+          <div class="pot-label" id="pot-label"></div>
+        </div>
+        <div class="banner" id="banner">
+          <div class="big-line" id="banner-title"></div>
+          <div class="sub" id="banner-sub"></div>
+          <button class="btn-primary" id="banner-btn" style="display:none">Deal next hand ▸</button>
+        </div>
+      </div>
+
+      <div class="action-bar" id="action-bar">
+        <div class="ab-row">
+          <button class="abtn fold" id="btn-fold">Fold</button>
+          <button class="abtn check" id="btn-check">Check</button>
+          <button class="abtn raise" id="btn-raise">Raise</button>
+          <span id="tocall-label" style="color:var(--dim);font-size:13.5px"></span>
+        </div>
+        <div class="ab-row" id="raise-row">
+          <button class="quickbet" data-qb="min">Min</button>
+          <button class="quickbet" data-qb="half">½ Pot</button>
+          <button class="quickbet" data-qb="pot">Pot</button>
+          <button class="quickbet" data-qb="allin">All-in</button>
+          <input type="range" id="raiseSlider">
+          <span id="raiseAmt"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="coach">
+        <h3>🧑‍🏫 Coach <span class="toggle" id="coach-toggle">hide</span></h3>
+        <div class="body" id="coach-body"><span class="off">The coach reads your cards and explains the odds when it's your turn. Only you can see it.</span></div>
+      </div>
+      <div class="logbox">
+        <h3>📜 Hand history</h3>
+        <div class="body" id="log-body"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Playing over your local Wi-Fi — no internet, no real money. Close the server window to end the game.</footer>
+
+<script src="engine.js"></script>
+<script src="mp.js"></script>
+</body>
+</html>

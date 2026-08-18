@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Trainer — Learn Texas Hold'em</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>♠ Poker <span>Trainer</span> — Texas Hold'em</h1>
+  <nav>
+    <button data-tab="learn" class="active">📖 Learn</button>
+    <button data-tab="quiz">🧠 Quiz</button>
+    <button data-tab="play">🎰 Play</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============================ LEARN ============================ -->
+<section class="tab active" id="tab-learn">
+  <div class="learn-nav">
+    <a href="#l-goal">The Goal</a>
+    <a href="#l-rankings">Hand Rankings</a>
+    <a href="#l-flow">How a Hand Plays</a>
+    <a href="#l-position">Position</a>
+    <a href="#l-starting">Starting Hands</a>
+    <a href="#l-math">The Math</a>
+    <a href="#l-tips">Beginner Tips</a>
+    <a href="#l-glossary">Glossary</a>
+  </div>
+
+  <div class="lesson" id="l-goal">
+    <h2>🎯 The Goal</h2>
+    <p>Texas Hold'em is a betting game played with a standard 52-card deck. You get <strong>2 private cards</strong> (your <em>hole cards</em>) and share <strong>5 community cards</strong> dealt face-up in the middle (the <em>board</em>).</p>
+    <p>Your final hand is the <strong>best 5-card poker hand</strong> you can make from any combination of your 2 cards and the 5 community cards — you can use both of your cards, just one, or even none ("playing the board").</p>
+    <p>You win a hand — and the pot of chips — in one of two ways:</p>
+    <ul>
+      <li><strong>Showdown:</strong> after all the betting, you have the best 5-card hand of the players remaining.</li>
+      <li><strong>Everyone folds:</strong> you bet, nobody calls, you take the pot — no matter what cards you held. This is why <em>bluffing</em> is possible.</li>
+    </ul>
+    <div class="tipbox"><b>Big idea:</b> Poker isn't about winning the most hands — it's about winning big pots when you're strong and losing small ones when you're weak. Folding is a winning move most of the time.</div>
+  </div>
+
+  <div class="lesson" id="l-rankings">
+    <h2>🏆 Hand Rankings (strongest → weakest)</h2>
+    <p>Memorize these — the Quiz tab will drill you until they're automatic. Ties within the same category are broken by the card ranks (highest first), and any leftover cards, called <em>kickers</em>.</p>
+    <div class="ranking"><div class="num">1</div><div class="info"><b>Royal Flush</b><span>A-K-Q-J-10, all the same suit. The unbeatable hand.</span></div><span class="cards-row" data-cards="As Ks Qs Js Ts"></span></div>
+    <div class="ranking"><div class="num">2</div><div class="info"><b>Straight Flush</b><span>Five consecutive cards, same suit.</span></div><span class="cards-row" data-cards="9h 8h 7h 6h 5h"></span></div>
+    <div class="ranking"><div class="num">3</div><div class="info"><b>Four of a Kind</b><span>All four cards of one rank ("quads").</span></div><span class="cards-row" data-cards="Qc Qd Qh Qs 7d"></span></div>
+    <div class="ranking"><div class="num">4</div><div class="info"><b>Full House</b><span>Three of a kind + a pair. "Kings full of nines."</span></div><span class="cards-row" data-cards="Kc Kd Kh 9s 9c"></span></div>
+    <div class="ranking"><div class="num">5</div><div class="info"><b>Flush</b><span>Any five cards of the same suit.</span></div><span class="cards-row" data-cards="Ad Jd 8d 5d 2d"></span></div>
+    <div class="ranking"><div class="num">6</div><div class="info"><b>Straight</b><span>Five consecutive ranks, mixed suits. Ace plays high or low (A-2-3-4-5 is the lowest, the "wheel").</span></div><span class="cards-row" data-cards="Tc 9d 8h 7s 6c"></span></div>
+    <div class="ranking"><div class="num">7</div><div class="info"><b>Three of a Kind</b><span>Three cards of one rank ("trips" or a "set").</span></div><span class="cards-row" data-cards="7c 7d 7h Kd 2s"></span></div>
+    <div class="ranking"><div class="num">8</div><div class="info"><b>Two Pair</b><span>Two different pairs. "Aces up."</span></div><span class="cards-row" data-cards="Ac Ah 4d 4s Kc"></span></div>
+    <div class="ranking"><div class="num">9</div><div class="info"><b>One Pair</b><span>Two cards of the same rank. Wins a lot of small pots.</span></div><span class="cards-row" data-cards="Jc Jh 9d 5s 2c"></span></div>
+    <div class="ranking"><div class="num">10</div><div class="info"><b>High Card</b><span>None of the above — best single card plays. "Ace high."</span></div><span class="cards-row" data-cards="Ac Kd 9h 5s 2c"></span></div>
+    <div class="tipbox"><b>Common mix-up:</b> a <b>flush beats a straight</b>, and a <b>full house beats a flush</b>. If two players both have a flush, the one with the highest card in the flush wins.</div>
+  </div>
+
+  <div class="lesson" id="l-flow">
+    <h2>🔄 How a Hand Plays Out</h2>
+    <ol>
+      <li><strong>The button & blinds.</strong> A dealer button (Ⓓ) marks the "dealer" and moves one seat left every hand. The player left of the button posts the <em>small blind</em> and the next player the <em>big blind</em> — forced bets that seed the pot so there's something to fight for.</li>
+      <li><strong>Hole cards.</strong> Everyone gets 2 cards face down.</li>
+      <li><strong>Pre-flop betting.</strong> Starting left of the big blind, each player may <em>fold</em>, <em>call</em> (match the current bet), or <em>raise</em>. The big blind gets the last option and may check if nobody raised.</li>
+      <li><strong>The Flop.</strong> 3 community cards are dealt face up. A betting round follows, starting with the first player left of the button still in the hand. When there's no bet yet, you may <em>check</em> (pass) or <em>bet</em>.</li>
+      <li><strong>The Turn.</strong> A 4th community card, then another betting round.</li>
+      <li><strong>The River.</strong> The 5th and final community card, then the last betting round.</li>
+      <li><strong>Showdown.</strong> Remaining players reveal their cards; best 5-card hand takes the pot. If two hands are identical, the pot splits.</li>
+    </ol>
+    <h3>The actions</h3>
+    <ul>
+      <li><strong>Check</strong> — pass the action without betting (only when nobody has bet this round).</li>
+      <li><strong>Bet</strong> — put chips in (minimum bet = one big blind).</li>
+      <li><strong>Call</strong> — match the current bet to stay in.</li>
+      <li><strong>Raise</strong> — increase the bet. A raise must be at least as big as the previous bet or raise.</li>
+      <li><strong>Fold</strong> — throw your hand away and give up any chips you've already put in.</li>
+      <li><strong>All-in</strong> — bet all your remaining chips. You can only win from each opponent up to what you put in (extra bets form <em>side pots</em>).</li>
+    </ul>
+  </div>
+
+  <div class="lesson" id="l-position">
+    <h2>🧭 Position: The Hidden Superpower</h2>
+    <p>The later you act in a betting round, the more information you have — you've seen what everyone else did before deciding. The <strong>button is the best seat</strong>: it acts last on every round after the flop.</p>
+    <ul>
+      <li><strong>Early position</strong> (first to act): play only strong hands — you'll act blind while everyone else reacts to you.</li>
+      <li><strong>Late position</strong> (button and just before it): you can profitably play more hands, steal blinds, and control pot size.</li>
+      <li><strong>The blinds:</strong> you already have chips in, but you'll be first to act every round after the flop — the worst spot. Don't defend them with junk.</li>
+    </ul>
+    <div class="tipbox"><b>Rule of thumb:</b> the same hand that's a fold in early position can be a raise on the button. When in doubt out of position, tighten up.</div>
+  </div>
+
+  <div class="lesson" id="l-starting">
+    <h2>🃏 Which Starting Hands Should I Play?</h2>
+    <p>There are 169 distinct starting hands, and most are losers. The #1 beginner leak is playing too many hands. Here's a simple tier list:</p>
+    <div class="handtier"><b>Premium</b> <span class="cards-row" data-cards="Ah Ad" data-sm="1"></span> <span class="cards-row" data-cards="Kc Ks" data-sm="1"></span> <span class="cards-row" data-cards="Qd Qh" data-sm="1"></span> <span class="cards-row" data-cards="As Ks" data-sm="1"></span> — AA, KK, QQ, AK. Always raise; happily re-raise.</div>
+    <div class="handtier"><b>Strong</b> — JJ, TT, 99, AQ, AJ suited, KQ suited. Usually raise; be more careful if someone re-raises.</div>
+    <div class="handtier"><b>Playable</b> — mid pairs (88–66), suited aces (A9s–A2s), suited connectors like <span class="cards-row" data-cards="9h 8h" data-sm="1"></span> J-10s, 10-9s. Best in late position, cheaply. These make big disguised hands (or easy folds).</div>
+    <div class="handtier"><b>Fold the rest</b> — including tempting junk like K-9 offsuit, Q-7, J-5, and the infamous 7-2. Unsuited, disconnected cards make weak pairs that lose big pots.</div>
+    <h3>Beginner pre-flop plan</h3>
+    <ul>
+      <li>If you're first in, <strong>come in for a raise</strong> (about 3 big blinds) — don't just call ("limp").</li>
+      <li>Facing a raise? Fold everything but Strong/Premium hands. Re-raise with Premium.</li>
+      <li>Expect to fold roughly <strong>3 out of every 4 hands</strong> before the flop. That's not passive — that's how winners play.</li>
+    </ul>
+  </div>
+
+  <div class="lesson" id="l-math">
+    <h2>🧮 The Math You Actually Need</h2>
+    <h3>Outs</h3>
+    <p>An <em>out</em> is a card that improves you to (probably) the best hand. Example: you hold <span class="cards-row" data-cards="Ah Kh" data-sm="1"></span> and the flop is <span class="cards-row" data-cards="Qh 7h 2s" data-sm="1"></span>. Any heart gives you the nut flush — 13 hearts minus the 4 you can see = <strong>9 outs</strong>.</p>
+    <h3>The Rule of 4 and 2</h3>
+    <ul>
+      <li><strong>× 2 per card:</strong> each single card to come hits your draw about <em>outs × 2</em>% of the time. (9 outs ≈ 19% on the turn card; a 4-out gutshot ≈ 8%)</li>
+      <li><strong>× 4 for both cards:</strong> if you'll see the turn <em>and</em> river for this one price — you're all-in on the flop, or nobody will bet again — it's ≈ <em>outs × 4</em>%. (9 outs ≈ 36%)</li>
+    </ul>
+    <p>When someone bets the flop, your call usually only buys the <strong>next card</strong> (they can bet again on the turn), so compare the price to the × 2 number unless the call is for all the chips.</p>
+    <h3>Pot odds</h3>
+    <p>When facing a bet, compare the price to your chances. If the pot is $80 and you must call $20, you're paying 20 into a final pot of 100 — you need to win <strong>20%</strong> of the time to break even.</p>
+    <p>A flush draw (~19% for the next card) is right at that price — and in practice it's a fine call, because when the flush hits you usually win <em>more</em> bets on later streets (<em>implied odds</em>). A gutshot (~8% per card) is nowhere near the price — fold it to big bets.</p>
+    <div class="tipbox"><b>Shortcut:</b> needed % = call ÷ (pot after your call). The coach in the Play tab computes this for you every time you face a bet — watch how it compares to your equity.</div>
+  </div>
+
+  <div class="lesson" id="l-tips">
+    <h2>💡 Ten Beginner Tips</h2>
+    <ol>
+      <li><strong>Fold more.</strong> Tight is right while you learn. Most hands are unplayable.</li>
+      <li><strong>Raise, don't limp.</strong> If a hand is worth playing, it's usually worth raising.</li>
+      <li><strong>Bet your strong hands.</strong> Beginners trap too much. Strong hands want big pots — build one.</li>
+      <li><strong>Respect big cards on the board.</strong> If the board shows A-K-Q and you have a pair of 9s, you're probably beat.</li>
+      <li><strong>Kickers matter.</strong> A-7 vs A-K on an ace-high board is a disaster for A-7. This is why weak aces are folds.</li>
+      <li><strong>Count your outs</strong> and use the rule of 4 and 2 before calling with a draw.</li>
+      <li><strong>Position, position, position.</strong> Play more hands late, fewer early.</li>
+      <li><strong>Watch the other players,</strong> not just your cards. Who bets big only with the goods? Who bluffs?</li>
+      <li><strong>Don't tilt.</strong> Bad beats happen — good decisions lose sometimes. Judge yourself on decisions, not results.</li>
+      <li><strong>Never play with money you can't afford to lose.</strong> This app is free — practice here first!</li>
+    </ol>
+  </div>
+
+  <div class="lesson" id="l-glossary">
+    <h2>📚 Glossary</h2>
+    <table class="gloss">
+      <tr><td>All-in</td><td>Betting every chip you have.</td></tr>
+      <tr><td>Blinds</td><td>Forced bets posted before cards are dealt (small blind and big blind).</td></tr>
+      <tr><td>Board</td><td>The face-up community cards everyone shares.</td></tr>
+      <tr><td>Button</td><td>The marker for the (nominal) dealer — the best position at the table.</td></tr>
+      <tr><td>Check-raise</td><td>Checking, then raising after an opponent bets — a power move.</td></tr>
+      <tr><td>Draw</td><td>An unmade hand that needs another card, e.g. four to a flush.</td></tr>
+      <tr><td>Flop / Turn / River</td><td>The 3rd–5th community cards: flop (3 at once), turn (4th), river (5th).</td></tr>
+      <tr><td>Gutshot</td><td>An inside straight draw — only 4 cards complete it (e.g. 9-8 on a 6-5-2 board needs a 7). A <em>double gutshot</em> has two different inside cards that complete it (8 outs).</td></tr>
+      <tr><td>Heads-up</td><td>A pot (or game) with only two players.</td></tr>
+      <tr><td>Kicker</td><td>A side card that breaks ties, e.g. the K in A-K vs A-7 on an ace-high board.</td></tr>
+      <tr><td>Limp</td><td>Just calling the big blind pre-flop instead of raising. Usually weak.</td></tr>
+      <tr><td>Muck</td><td>Folding / discarding your hand without showing it.</td></tr>
+      <tr><td>Nuts</td><td>The best possible hand given the board. "The nut flush" = best possible flush.</td></tr>
+      <tr><td>Offsuit / Suited</td><td>Whether your two hole cards share a suit. Suited hands can make flushes.</td></tr>
+      <tr><td>Open-ended</td><td>A straight draw completed on either end — 8 outs (e.g. 9-8 on 7-6-2).</td></tr>
+      <tr><td>Outs</td><td>Cards left in the deck that improve your hand to a likely winner.</td></tr>
+      <tr><td>Pocket pair</td><td>A pair in your hole cards, e.g. two 8s ("pocket eights").</td></tr>
+      <tr><td>Pot odds</td><td>The price of a call vs. the size of the pot — the math of whether calling is profitable.</td></tr>
+      <tr><td>Set / Trips</td><td>Three of a kind. A "set" uses a pocket pair + one board card (very disguised, very strong).</td></tr>
+      <tr><td>Showdown</td><td>Revealing hands after the final betting round to decide the winner.</td></tr>
+      <tr><td>Side pot</td><td>A separate pot created when someone is all-in and others keep betting.</td></tr>
+      <tr><td>Tilt</td><td>Playing badly because you're emotional after a loss.</td></tr>
+      <tr><td>Under the gun</td><td>The first seat to act pre-flop (left of the big blind) — the worst position.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ QUIZ ============================ -->
+<section class="tab" id="tab-quiz">
+  <div class="quiz-top">
+    <div class="mode-picker">
+      <button id="mode-name" class="active">🃏 Name That Hand</button>
+      <button id="mode-wins">⚔️ Which Hand Wins?</button>
+    </div>
+    <div class="scorebox">
+      <div>Session <b id="qz-session">0/0</b></div>
+      <div>Streak <b id="qz-streak">0</b></div>
+      <div>Best streak <b id="qz-best">0</b></div>
+    </div>
+  </div>
+  <div class="quiz-stage">
+    <div class="quiz-q" id="qz-question"></div>
+    <div class="quiz-cards" id="qz-cards"></div>
+    <div class="quiz-answers" id="qz-answers"></div>
+    <div class="quiz-feedback" id="qz-feedback"></div>
+    <button class="btn-primary" id="qz-next" style="display:none">Next ▸</button>
+  </div>
+</section>
+
+<!-- ============================ PLAY ============================ -->
+<section class="tab" id="tab-play">
+  <div class="play-wrap">
+    <div class="table-zone">
+      <div class="table-status">
+        <div>Blinds <b style="color:var(--text)">5 / 10</b> &nbsp;•&nbsp; <span id="hand-num">Hand #—</span></div>
+        <div class="right">
+          <label>Speed
+            <select id="speed">
+              <option value="fast">Fast</option>
+              <option value="normal" selected>Normal</option>
+              <option value="slow">Slow</option>
+            </select>
+          </label>
+          <button id="btn-newgame">↻ New game</button>
+        </div>
+      </div>
+
+      <div class="poker-table" id="pokerTable">
+        <div class="board-zone">
+          <div class="street-label" id="street-label"></div>
+          <div class="board-cards" id="board-cards"></div>
+          <div class="pot-label" id="pot-label"></div>
+        </div>
+        <div class="banner" id="banner">
+          <div class="big-line" id="banner-title"></div>
+          <div class="sub" id="banner-sub"></div>
+          <button class="btn-primary" id="banner-btn">Deal next hand ▸</button>
+        </div>
+      </div>
+
+      <div class="action-bar" id="action-bar">
+        <div class="ab-row">
+          <button class="abtn fold" id="btn-fold">Fold</button>
+          <button class="abtn check" id="btn-check">Check</button>
+          <button class="abtn raise" id="btn-raise">Raise</button>
+          <span id="tocall-label" style="color:var(--dim);font-size:13.5px"></span>
+        </div>
+        <div class="ab-row" id="raise-row">
+          <button class="quickbet" data-qb="min">Min</button>
+          <button class="quickbet" data-qb="half">½ Pot</button>
+          <button class="quickbet" data-qb="pot">Pot</button>
+          <button class="quickbet" data-qb="allin">All-in</button>
+          <input type="range" id="raiseSlider">
+          <span id="raiseAmt"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="coach">
+        <h3>🧑‍🏫 Coach <span class="toggle" id="coach-toggle">hide</span></h3>
+        <div class="body" id="coach-body"><span class="off">The coach reads your cards and explains the odds when it's your turn.</span></div>
+      </div>
+      <div class="logbox">
+        <h3>📜 Hand history</h3>
+        <div class="body" id="log-body"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Local practice app — no real money, no internet needed. Built for learning.</footer>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

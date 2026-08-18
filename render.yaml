@@ -1,0 +1,16 @@
+# Render Blueprint — deploys the Poker Party server as a free web service.
+# In Render: New + → Blueprint → pick your poker repo → Apply.
+services:
+  - type: web
+    name: poker-party
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/info
+    autoDeploy: true
+    envVars:
+      # Room code players must type to join. Set your own value in the Render
+      # dashboard (Environment tab). Leave unset to allow anyone with the link.
+      - key: POKER_ROOM_CODE
+        sync: false
