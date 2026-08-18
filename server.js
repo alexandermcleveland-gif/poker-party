@@ -74,8 +74,6 @@ function newLobby(keepPlayers, keepSeq, keepGen) {
     revealed: new Set(),     // seats whose hole cards are public this hand
     botTimer: null,
     botGen: 0,
-    turnSeat: -1,            // which seat the human-turn watchdog is timing
-    turnStart: 0,
   };
 }
 let S = newLobby();
@@ -125,7 +123,7 @@ function pushSyntheticEvent(ev) {
 // the server acts for them (check if free, else fold) so one person can't freeze
 // the whole table — essential for a permanent public server with no host present.
 const HUMAN_DISCONNECT_MS = Number(process.env.POKER_HUMAN_DISCONNECT_MS) || 20000; // no poll in 20s => gone
-const HUMAN_TURN_MAX_MS = Number(process.env.POKER_HUMAN_MAX_MS) || 90000;   // hard cap even if connected
+const HUMAN_TURN_MAX_MS = Number(process.env.POKER_HUMAN_MAX_MS) || 120000;  // hard cap per turn even if connected
 const ACTOR_CHECK_MS = Number(process.env.POKER_ACTOR_CHECK_MS) || 4000;
 
 function autoActFor(seat) {
@@ -160,8 +158,11 @@ function scheduleBots() {
     return;
   }
 
-  // Human actor: remember when their turn started, then poll a watchdog.
-  if (S.turnSeat !== seat) { S.turnSeat = seat; S.turnStart = Date.now(); }
+  // Human actor: THIS turn starts now. Each scheduleBots() call is a fresh turn
+  // (the previous actor just finished), so reset the deadline every time — otherwise
+  // a player who keeps their seat across hands would be timed from their first-ever
+  // turn and get auto-acted on every move once the session passed the limit.
+  const turnStart = Date.now();
   const tick = () => {
     if (gen !== S.botGen) return;
     const g2 = S.game;
@@ -169,7 +170,7 @@ function scheduleBots() {
     const p = S.players[seat];
     const now = Date.now();
     const gone = !p || (now - p.lastSeen > HUMAN_DISCONNECT_MS);
-    const tooLong = now - (S.turnStart || now) > HUMAN_TURN_MAX_MS;
+    const tooLong = now - turnStart > HUMAN_TURN_MAX_MS;
     if (gone || tooLong) { autoActFor(seat); return; }
     S.botTimer = setTimeout(tick, ACTOR_CHECK_MS);
   };
